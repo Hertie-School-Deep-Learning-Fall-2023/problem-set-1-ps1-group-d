@@ -22,6 +22,12 @@ class NeuralNetworkTorch(nn.Module):
         self.random_state = random_state   
         torch.manual_seed(self.random_state)
 
+        # Initialize layers using the variable size
+        self.layers = nn.ModuleList([
+            nn.Linear(in_features=sizes[i], out_features=sizes[i+1]) 
+            for i in range(len(sizes)-1)
+        ])
+
         self.activation_func = torch.sigmoid
         self.output_func = torch.softmax
         self.loss_func = nn.BCEWithLogitsLoss()
@@ -32,7 +38,17 @@ class NeuralNetworkTorch(nn.Module):
         '''
         TODO: The method should return the output of the network.
         '''
-        pass
+        for layer in self.layers[:-1]:
+            x_train = self.activation_func(layer(x_train))
+    
+        # Flatten the input before the final layer
+        x_train = self._flatten(x_train)
+
+        # Output layer without activation
+        x_train = self.layers[-1](x_train)
+
+        return x_train
+
 
 
 
@@ -40,7 +56,8 @@ class NeuralNetworkTorch(nn.Module):
         '''
         TODO: Implement the backpropagation algorithm responsible for updating the weights of the neural network.
         '''
-        pass
+        loss = self.loss_func(output, y_train.float())
+        loss.backward()
 
 
 
@@ -48,7 +65,8 @@ class NeuralNetworkTorch(nn.Module):
         '''
         TODO: Update the network weights according to stochastic gradient descent.
         '''
-        pass
+        self.optimizer.step()
+        self.optimizer.zero_grad()
 
 
     def _flatten(self, x):
@@ -73,7 +91,10 @@ class NeuralNetworkTorch(nn.Module):
         TODO: Implement the prediction making of the network.
         The method should return the index of the most likeliest output class.
         '''
-        pass
+       
+        x = self._flatten(x)
+        output = self._forward_pass(x)
+        return torch.argmax(output, axis=1)
 
 
 

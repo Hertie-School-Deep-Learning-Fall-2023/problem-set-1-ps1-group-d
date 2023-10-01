@@ -55,7 +55,21 @@ class NeuralNetwork():
         TODO: Implement the forward propagation algorithm.
         The method should return the output of the network.
         '''
-        pass
+        # When defining the forward propagation, we need to first assign the training input to the input layer (this has already been predefined in self.A). Next, we iterate over all layers in the network and compute the dot product
+        # of the weights and the activations, starting at the second layer. Then, we apply the also predefined activation function (in this case its sigmoid). Then, the final layers output is assigned to the object output.
+        self.A[0] = x_train
+
+        for i in range(1, len(self.layer_shapes)):
+        # Compute the weighted sum
+            self.Z[i-1] = np.dot(self.weights[i-1], self.A[i-1])
+
+        # Apply activation function
+            self.A[i] = self.activation_func(self.Z[i-1])
+
+    # The final layer's output is the output of the entire network
+        output = self.A[-1]
+
+        return output
 
 
 
@@ -65,7 +79,25 @@ class NeuralNetwork():
         The method should return a list of the weight gradients which are used to update the weights in self._update_weights().
 
         '''
-        pass 
+        # Next, we apply the backpropagation. We start by creating an empty list in which the weights are stored later. Next, we calculate the loss (this was also predefined, in this case it's mse) and the initial gradient of the loss with respect
+        # to the output. Next, we iterate over the layers, starting from the last hidden one. In delta_Z, we calcualte the gradient of the loss wrt to the weighted sum of the layer, which is then used to calculate the gradient 
+        # of the loss wrt the weights. We then store the weight gradient and update the delta_output for the next layer, and finally return the weight gradients.
+                
+        weight_gradients = []
+
+    
+        loss = self.cost_func(y_train, output)
+        delta_output = self.cost_func_deriv(y_train, output) * self.output_func_deriv(output)
+
+    
+        for i in range(len(self.layer_shapes) - 1, 0, -1):
+            delta_Z = delta_output * self.activation_func_deriv(self.Z[i-1])
+            delta_weight = np.outer(delta_Z.T, self.A[i-1]).T / len(y_train)
+            weight_gradients.insert(0, delta_weight)
+            delta_output = np.dot(self.weights[i-1].T, delta_Z)
+
+        return weight_gradients
+         
     
 
 
@@ -74,7 +106,11 @@ class NeuralNetwork():
         TODO: Update the network weights according to stochastic gradient descent.
 
         '''
-        pass
+
+        weight_gradients = [self.learning_rate * weight_gradient.T for weight_gradient in weight_gradients]
+        self.weights = [weight - weight_gradient for weight, weight_gradient in zip(self.weights, weight_gradients)]
+        return self.weights
+        
 
 
 
@@ -106,7 +142,13 @@ class NeuralNetwork():
         TODO: Implement the prediction making of the network.
         The method should return the index of the most likeliest output class.
         '''
-        pass
+        
+        output = self._forward_pass(x)
+
+    
+        predicted_class = np.argmax(output)
+
+        return predicted_class
 
 
 

@@ -11,30 +11,30 @@ class NeuralNetworkTf(tf.keras.Sequential):
     self.sizes = sizes
     self.random_state = random_state
     tf.random.set_seed(random_state)
+
+    self.add(tf.keras.layers.Flatten(input_shape=(28,28))) #We flatten the input data here so that shapes are compatible later (mistake 1)
     
     for i in range(0, len(sizes)):
-
       if i == len(sizes) - 1:
-        self.add(tf.keras.layers.Dense(sizes[i], activation='sigmoid'))
-        
+        #self.add(tf.keras.layers.Dense(sizes[i], activation='sigmoid')) 
+        self.add(tf.keras.layers.Dense(sizes[i], activation='softmax')) # Mistake 2: We changed the activation function for the ouput layer from sigmoid to softmax, which is suited for multi-class classification. 
+      
       else:
-        self.add(tf.keras.layers.Dense(sizes[i], activation='softmax'))
+        self.add(tf.keras.layers.Dense(sizes[i], activation='sigmoid')) # Minor adjustment: Using sigmoid instead of softmax here
         
   
-  def compile_and_fit(self, x_train, y_train, 
-                      epochs=50, learning_rate=0.01, 
-                      batch_size=1,validation_data=None):
+  def compile_and_fit(self, x_train, y_train, epochs=50, learning_rate=0.01, batch_size=1, validation_data = None):
     
-    optimizer = tf.keras.optimizers.SGD(learning_rate=learning_rate)
-    loss_function = tf.keras.losses.BinaryCrossentropy()
+    optimizer = tf.keras.optimizers.legacy.SGD(learning_rate=learning_rate)
+
+    loss_function = tf.keras.losses.CategoricalCrossentropy() # Mistake 3: Using sparse categorial cross entropy instead of binary since we are dealing with multible classes (digits)
+    
     eval_metrics = ['accuracy']
 
-    super().compile(optimizer=optimizer, loss=loss_function, 
-                    metrics=eval_metrics)
+    super().compile(optimizer=optimizer, loss=loss_function, metrics=eval_metrics)
     return super().fit(x_train, y_train, epochs=epochs, 
-                        batch_size=batch_size, 
-                        validation_data=validation_data)  
-
+                       batch_size=batch_size, 
+                       validation_data=validation_data)
 
 
 class TimeBasedLearningRate(tf.keras.optimizers.schedules.LearningRateSchedule):
@@ -44,13 +44,9 @@ class TimeBasedLearningRate(tf.keras.optimizers.schedules.LearningRateSchedule):
     '''
 
   def __init__(self, initial_learning_rate):
-
-    pass
-
+    self.initial_learning_rate = initial_learning_rate
+        
 
   def __call__(self, step):
-
-    pass
-
-
+      return tf.maximum(self.initial_learning_rate - step, 1)
     
