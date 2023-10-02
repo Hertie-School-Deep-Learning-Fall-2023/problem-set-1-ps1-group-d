@@ -46,7 +46,7 @@ class TimeBasedLearningRate(tf.keras.optimizers.schedules.LearningRateSchedule):
       
       super(TimeBasedLearningRate, self).__init__()
       self.initial_learning_rate = initial_learning_rate
-      self.decay = tf.cast(decay, dtype=tf.float32)
+      self.decay = tf.cast(decay, dtype=tf.float32) # adding decay and min learning rate as tuneable parameters to be able to correct the model in the notebook later on
       self.min_learning_rate = min_learning_rate
 
   
