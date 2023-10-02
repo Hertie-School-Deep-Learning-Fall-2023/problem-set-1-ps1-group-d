@@ -2,7 +2,6 @@ import tensorflow as tf
 tf.config.run_functions_eagerly(True)
 
 
-
 class NeuralNetworkTf(tf.keras.Sequential):
 
   def __init__(self, sizes, random_state=1):
@@ -27,7 +26,7 @@ class NeuralNetworkTf(tf.keras.Sequential):
     
     optimizer = tf.keras.optimizers.legacy.SGD(learning_rate=learning_rate)
 
-    loss_function = tf.keras.losses.CategoricalCrossentropy() # Mistake 3: Using sparse categorial cross entropy instead of binary since we are dealing with multible classes (digits)
+    loss_function = tf.keras.losses.CategoricalCrossentropy() # Mistake 3: Using categorial cross entropy instead of binary since we are dealing with multiple classes (digits)
     
     eval_metrics = ['accuracy']
 
@@ -43,10 +42,15 @@ class TimeBasedLearningRate(tf.keras.optimizers.schedules.LearningRateSchedule):
   learning rate by 1 until minimal learning rate of 1 is reached.
     '''
 
-  def __init__(self, initial_learning_rate):
-    self.initial_learning_rate = initial_learning_rate
-        
+  def __init__(self, initial_learning_rate, decay=1, min_learning_rate=1):
+      
+      super(TimeBasedLearningRate, self).__init__()
+      self.initial_learning_rate = initial_learning_rate
+      self.decay = tf.cast(decay, dtype=tf.float32)
+      self.min_learning_rate = min_learning_rate
 
+  
   def __call__(self, step):
-      return tf.maximum(self.initial_learning_rate - step, 1)
+      learning_rate = tf.maximum(self.min_learning_rate, self.initial_learning_rate - step * self.decay)
+      return learning_rate
     
